@@ -1,0 +1,90 @@
+name: Python Greetings Delivery Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  install-pip-deps:
+    runs-on: [self-hosted]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/install-pip-deps
+
+  deploy-to-dev:
+    runs-on: [self-hosted]
+    needs: install-pip-deps
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/deploy
+        with:
+          env: dev
+          port: 7001
+
+  tests-on-dev:
+    runs-on: [self-hosted]
+    needs: deploy-to-dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/test
+        with:
+          env: dev
+
+  deploy-to-staging:
+    runs-on: [self-hosted]
+    needs: tests-on-dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/deploy
+        with:
+          env: stg
+          port: 7002
+
+  tests-on-staging:
+    runs-on: [self-hosted]
+    needs: deploy-to-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/test
+        with:
+          env: stg
+
+  deploy-to-preprod:
+    runs-on: [self-hosted]
+    needs: tests-on-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/deploy
+        with:
+          env: preprod
+          port: 7003
+
+  tests-on-preprod:
+    runs-on: [self-hosted]
+    needs: deploy-to-preprod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/test
+        with:
+          env: preprod
+
+  deploy-to-prod:
+    runs-on: [self-hosted]
+    needs: tests-on-preprod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/deploy
+        with:
+          env: prod
+          port: 7004
+
+  tests-on-prod:
+    runs-on: [self-hosted]
+    needs: deploy-to-prod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/test
+        with:
+          env: prod
+

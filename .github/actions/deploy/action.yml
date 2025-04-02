@@ -1,0 +1,25 @@
+name: Deploy Service
+description: Clones app repo and starts it on a given port
+inputs:
+  env:
+    description: "Environment to deploy to"
+    required: true
+  port:
+    description: "Port to run the app on"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+      with:
+        repository: mtararujs/python-greetings
+        path: python-greetings
+
+    - run: |
+        echo "Deploying to ${{ inputs.env }}..."
+        pm2 delete greetings-app-${{ inputs.env }} || true
+        pm2 start app.py --name greetings-app-${{ inputs.env }} -- --port ${{ inputs.port }}
+      working-directory: python-greetings
+      shell: bash
